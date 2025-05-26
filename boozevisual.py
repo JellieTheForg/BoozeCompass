@@ -2,12 +2,10 @@ import pygame
 import math
 import time
 
-
 # Your current location
-your_lat = 43.643435266106145
-your_lon = -79.5204522388619
-heading = 0
-
+your_lat = 43.66732798144678
+your_lon = -79.38124427443074
+heading = 270
 stores = [
     (41.7618115, -82.6887335),
     (42.0330356, -82.5978878),
@@ -701,9 +699,7 @@ stores = [
 ]
 
 pygame.init()
-WIDTH, HEIGHT = 400, 400
-CENTER = (WIDTH // 2, HEIGHT // 2)
-RADIUS = 150
+WIDTH, HEIGHT = 128,64
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Booze Compass")
 font = pygame.font.SysFont(None, 24)
@@ -718,8 +714,7 @@ def haversine(lat1, lon1, lat2, lon2):
     delta_phi = math.radians(lat2 - lat1)
     delta_lambda = math.radians(lon2 - lon1)
 
-    a = math.sin(delta_phi / 2)**2 + \
-        math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2)**2
+    a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2)**2
 
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
@@ -750,30 +745,31 @@ def find_closest_store(current_lat, current_lon, stores):
 
 # --- Drawing Function ---
 def draw_compass(current_heading_deg, target_bearing_deg, distance_to_store):
-    screen.fill((30, 30, 30))
+    screen.fill((0, 0, 0))
 
-    pygame.draw.circle(screen, (200, 200, 200), CENTER, RADIUS, 2)
+    # --- Display settings for SSD1306 ---
+    WIDTH, HEIGHT = 128, 64
+    COMPASS_RADIUS = 25
+    COMPASS_CENTER = (96, 32)
 
-    for angle, label in zip([0, 90, 180, 270], ["N", "E", "S", "W"]):
-        rad = math.radians(angle)
-        x = CENTER[0] + math.sin(rad) * (RADIUS + 10)
-        y = CENTER[1] - math.cos(rad) * (RADIUS + 10)
-        text = font.render(label, True, (255, 255, 255))
-        rect = text.get_rect(center=(x, y))
-        screen.blit(text, rect)
+    #compass circle
+    pygame.draw.circle(screen, (255, 255, 255), COMPASS_CENTER, COMPASS_RADIUS, 1)
 
-    # Calculate the relative turn direction
+    #direction arrow
     turn_angle = (target_bearing_deg - current_heading_deg) % 360
     turn_rad = math.radians(turn_angle)
+    arrow_x = COMPASS_CENTER[0] + math.sin(turn_rad) * COMPASS_RADIUS
+    arrow_y = COMPASS_CENTER[1] - math.cos(turn_rad) * COMPASS_RADIUS
+    pygame.draw.line(screen, (255, 255, 255), COMPASS_CENTER, (arrow_x, arrow_y), 2)
 
-    x = CENTER[0] + math.sin(turn_rad) * RADIUS
-    y = CENTER[1] - math.cos(turn_rad) * RADIUS
-    pygame.draw.line(screen, (0, 255, 0), CENTER, (x, y), 4)
-
-    dist_text = font.render(f"Distance: {int(distance_to_store)} m", True, (255, 255, 255))
-    screen.blit(dist_text, (10, 10))
+    #distance
+    distance_str = f"{int(distance_to_store)}m"
+    value_text = font.render(distance_str, True, (255, 255, 255))
+    screen.blit(value_text, (5, 24))
 
     pygame.display.flip()
+
+
 
 # --- Main Loop ---
 
