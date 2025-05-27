@@ -1,12 +1,16 @@
 import pygame
 import math
 import time
+import numpy as np
+from sklearn.neighbors import BallTree
 
-# Your current location
-your_lat = 43.66732798144678
-your_lon = -79.38124427443074
-heading = 270
-stores = [
+# placeholder, to be replaced by raspberry pi inputs
+your_lat = 43.651060
+your_lon = -79.507432
+heading = 0
+
+# Example: replace this with your real store lat/lon list
+store_locations_deg = np.array([
     (41.7618115, -82.6887335),
     (42.0330356, -82.5978878),
     (42.0352878, -82.9206903),
@@ -696,26 +700,27 @@ stores = [
     (51.0184466, -93.8214629),
     (51.2741577, -80.6465513),
     (51.4657406, -90.1980467),
-]
+])
+
+# Convert degrees to radians for haversine KDTree
+store_locations_rad = np.radians(store_locations_deg)
+tree = BallTree(store_locations_rad, metric='haversine')
 
 pygame.init()
-WIDTH, HEIGHT = 128,64
+WIDTH, HEIGHT = 128, 64
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Booze Compass")
 font = pygame.font.SysFont(None, 24)
 
-
-store_lat, store_lon = stores[0]
 # --- GPS Functions ---
 def haversine(lat1, lon1, lat2, lon2):
-    R = 6371000  # Earth radius in meters
+    R = 6371000  # earth radius in meters
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
     delta_phi = math.radians(lat2 - lat1)
     delta_lambda = math.radians(lon2 - lon1)
 
     a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2)**2
-
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
@@ -725,61 +730,43 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
     delta_lambda = math.radians(lon2 - lon1)
 
     x = math.sin(delta_lambda) * math.cos(phi2)
-    y = math.cos(phi1) * math.sin(phi2) - \
-        math.sin(phi1) * math.cos(phi2) * math.cos(delta_lambda)
+    y = math.cos(phi1) * math.sin(phi2) - math.sin(phi1) * math.cos(phi2) * math.cos(delta_lambda)
 
     bearing = (math.degrees(math.atan2(x, y)) + 360) % 360
     return bearing
 
-def find_closest_store(current_lat, current_lon, stores):
-    closest_store = None
-    min_distance = float('inf')
-    
-    for store in stores:
-        distance = haversine(current_lat, current_lon, store[0], store[1])
-        if distance < min_distance:
-            min_distance = distance
-            closest_store = store
-    
-    return closest_store
+def find_closest_store(lat_deg, lon_deg):
+    point_rad = np.radians([[lat_deg, lon_deg]])
+    dist, ind = tree.query(point_rad, k=1)
+    closest_index = ind[0][0]
+    distance_m = dist[0][0] * 6371000  # convert radians to meters
+    return store_locations_deg[closest_index], distance_m
 
 # --- Drawing Function ---
 def draw_compass(current_heading_deg, target_bearing_deg, distance_to_store):
     screen.fill((0, 0, 0))
 
-    # --- Display settings for SSD1306 ---
-    WIDTH, HEIGHT = 128, 64
     COMPASS_RADIUS = 25
     COMPASS_CENTER = (96, 32)
 
-    #compass circle
     pygame.draw.circle(screen, (255, 255, 255), COMPASS_CENTER, COMPASS_RADIUS, 1)
 
-    #direction arrow
     turn_angle = (target_bearing_deg - current_heading_deg) % 360
     turn_rad = math.radians(turn_angle)
     arrow_x = COMPASS_CENTER[0] + math.sin(turn_rad) * COMPASS_RADIUS
     arrow_y = COMPASS_CENTER[1] - math.cos(turn_rad) * COMPASS_RADIUS
     pygame.draw.line(screen, (255, 255, 255), COMPASS_CENTER, (arrow_x, arrow_y), 2)
 
-    #distance
     distance_str = f"{int(distance_to_store)}m"
     value_text = font.render(distance_str, True, (255, 255, 255))
     screen.blit(value_text, (5, 24))
 
     pygame.display.flip()
 
-
-
 # --- Main Loop ---
-
 def main():
     global heading, your_lat, your_lon, store_lat, store_lon
-    
-    # Find closest store
-    closest_store = find_closest_store(your_lat, your_lon, stores)
-    store_lat, store_lon = closest_store
-    
+
     clock = pygame.time.Clock()
     running = True
 
@@ -788,9 +775,9 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Calculate target data
+        # Find closest store using KDTree
+        (store_lat, store_lon), distance_to_store = find_closest_store(your_lat, your_lon)
         bearing_to_store = calculate_bearing(your_lat, your_lon, store_lat, store_lon)
-        distance_to_store = haversine(your_lat, your_lon, store_lat, store_lon)
 
         draw_compass(heading, bearing_to_store, distance_to_store)
         clock.tick(10)
