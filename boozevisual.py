@@ -9,7 +9,7 @@ your_lat = 43.651060
 your_lon = -79.507432
 heading = 0
 
-# Example: replace this with your real store lat/lon list
+#LCBO locations
 store_locations_deg = np.array([
     (41.7618115, -82.6887335),
     (42.0330356, -82.5978878),
@@ -702,7 +702,7 @@ store_locations_deg = np.array([
     (51.4657406, -90.1980467),
 ])
 
-# Convert degrees to radians for haversine KDTree
+#convert degrees to radians for haversine KDTree
 store_locations_rad = np.radians(store_locations_deg)
 tree = BallTree(store_locations_rad, metric='haversine')
 
@@ -739,7 +739,7 @@ def find_closest_store(lat_deg, lon_deg):
     point_rad = np.radians([[lat_deg, lon_deg]])
     dist, ind = tree.query(point_rad, k=1)
     closest_index = ind[0][0]
-    distance_m = dist[0][0] * 6371000  # convert radians to meters
+    distance_m = dist[0][0] * 6371000
     return store_locations_deg[closest_index], distance_m
 
 # --- Drawing Function ---
@@ -775,7 +775,6 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Find closest store using KDTree
         (store_lat, store_lon), distance_to_store = find_closest_store(your_lat, your_lon)
         bearing_to_store = calculate_bearing(your_lat, your_lon, store_lat, store_lon)
 
