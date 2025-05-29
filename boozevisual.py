@@ -1,11 +1,8 @@
 import pygame
 import math
-import time
 import numpy as np
-from sklearn.neighbors import BallTree
 import sys
 import joblib
-
 
 # placeholder, to be replaced by raspberry pi inputs
 your_lat = 43.66739785769686
@@ -24,8 +21,6 @@ pygame.mixer.quit()
 info = pygame.display.Info()
 screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
 pygame.event.set_grab(True)
-
-
 
 # --- GPS Functions ---
 def haversine(lat1, lon1, lat2, lon2):
