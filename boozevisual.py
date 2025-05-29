@@ -5,11 +5,11 @@ import sys
 import joblib
 
 # placeholder, to be replaced by raspberry pi inputs
-your_lat = 43.66739785769686
-your_lon = -79.38122281349305
+your_lat = 43.6673771139653
+your_lon = -79.3816631603432
 heading = 90
 
-tree, store_locations_deg = joblib.load('tree.joblib')
+tree, store_locations_deg = joblib.load('treeall.joblib')
 store_locations_rad = np.radians(store_locations_deg)
 
 pygame.init()
