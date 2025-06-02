@@ -20,10 +20,13 @@ heading = 90
 # --- Compass ---
 # Configure HMC5883L(compass module)
 ADDRESS = 0x1E
+"""
 #bus = smbus.SMBus(1)
 #bus.write_byte_data(ADDRESS, 0x00, 0x70)  # 8 samples, 15Hz
 #bus.write_byte_data(ADDRESS, 0x01, 0x20)  # Gain = 1.3 gauss 
 #bus.write_byte_data(ADDRESS, 0x02, 0x00)  # Continuous mode(doesn't sleep after taking one measurement)
+"""
+#^UNCOMMENT WHEN USING MODULES ON RASPI
 
 def read_word(addr):
     high = bus.read_byte_data(ADDRESS, addr)
@@ -93,6 +96,20 @@ def find_closest_store(lat_deg, lon_deg):
     distance_m = dist[0][0] * 6371000
     return store_locations_deg[closest_index], distance_m
 
+"""
+while True:
+	port="/dev/ttyAMA0"
+	ser=serial.Serial(port, baudrate=9600, timeout=0.5)
+	dataout = pynmea2.NMEAStreamReader()
+	newdata=ser.readline()
+
+	if newdata[0:6] == "$GPRMC":
+		newmsg=pynmea2.parse(newdata)
+		your_lat=newmsg.latitude
+		your_lon=newmsg.longitude
+"""
+#^UNCOMMENT WHEN USING MODULES ON RASPI
+
 # --- Drawing Function ---
 pygame.init()
 WIDTH, HEIGHT = 128, 64
@@ -129,7 +146,6 @@ def main():
     global heading, your_lat, your_lon, store_lat, store_lon
     clock = pygame.time.Clock()
     running = True
-
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
