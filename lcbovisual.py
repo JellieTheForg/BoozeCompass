@@ -1,13 +1,10 @@
 import pygame
 import math
 import numpy as np
-import sys
 import joblib
-import time
-import string
 import serial
 import smbus2 as smbus
-import pynmea
+import pynmea2
 
 tree, store_locations_deg = joblib.load('tree.joblib')
 store_locations_rad = np.radians(store_locations_deg)
@@ -21,10 +18,10 @@ heading = 90
 # Configure HMC5883L(compass module)
 ADDRESS = 0x1E
 """
-#bus = smbus.SMBus(1)
-#bus.write_byte_data(ADDRESS, 0x00, 0x70)  # 8 samples, 15Hz
-#bus.write_byte_data(ADDRESS, 0x01, 0x20)  # Gain = 1.3 gauss 
-#bus.write_byte_data(ADDRESS, 0x02, 0x00)  # Continuous mode(doesn't sleep after taking one measurement)
+bus = smbus.SMBus(1)
+bus.write_byte_data(ADDRESS, 0x00, 0x70)  # 8 samples, 15Hz
+bus.write_byte_data(ADDRESS, 0x01, 0x20)  # Gain = 1.3 gauss 
+bus.write_byte_data(ADDRESS, 0x02, 0x00)  # Continuous mode(doesn't sleep after taking one measurement)
 """
 #^UNCOMMENT WHEN USING MODULES ON RASPI
 
@@ -97,7 +94,7 @@ def find_closest_store(lat_deg, lon_deg):
     return store_locations_deg[closest_index], distance_m
 
 """
-while True:
+def get_gps_coords()
 	port="/dev/ttyAMA0"
 	ser=serial.Serial(port, baudrate=9600, timeout=0.5)
 	dataout = pynmea2.NMEAStreamReader()
@@ -107,6 +104,7 @@ while True:
 		newmsg=pynmea2.parse(newdata)
 		your_lat=newmsg.latitude
 		your_lon=newmsg.longitude
+    return your_lat, your_lon
 """
 #^UNCOMMENT WHEN USING MODULES ON RASPI
 
@@ -143,23 +141,29 @@ def draw_compass(current_heading_deg, target_bearing_deg, distance_to_store):
 
 # --- Main Loop ---
 def main():
-    global heading, your_lat, your_lon, store_lat, store_lon
-    clock = pygame.time.Clock()
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                running = False
-
-        (store_lat, store_lon), distance_to_store = find_closest_store(your_lat, your_lon)
-        bearing_to_store = calculate_bearing(your_lat, your_lon, store_lat, store_lon)
-
-        draw_compass(heading, bearing_to_store, distance_to_store)
-        clock.tick(10)
-
-    pygame.quit()
+    global heading, your_lat, your_lon
+    
+    try:
+        clock = pygame.time.Clock()
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    running = False
+            
+            #sensor data 
+            # heading = get_heading()  # Uncomment for real compass
+            # your_lat, your_lon = get_gps_coords()  # Uncomment for real GPS
+            
+            (store_lat, store_lon), distance_to_store = find_closest_store(your_lat, your_lon)
+            bearing_to_store = calculate_bearing(your_lat, your_lon, store_lat, store_lon)
+            draw_compass(heading, bearing_to_store, distance_to_store)
+            clock.tick(10)
+            
+    finally:
+        pygame.quit()
 
 if __name__ == "__main__":
     main()
