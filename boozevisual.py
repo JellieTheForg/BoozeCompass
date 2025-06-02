@@ -89,19 +89,21 @@ def find_closest_store(lat_deg, lon_deg):
     distance_m = dist[0][0] * 6371000
     return store_locations_deg[closest_index], distance_m
 
-"""
-def get_gps_coords()
-	port="/dev/ttyAMA0"
-	ser=serial.Serial(port, baudrate=9600, timeout=0.5)
-	dataout = pynmea2.NMEAStreamReader()
-	newdata=ser.readline()
-
-	if newdata[0:6] == "$GPRMC":
-		newmsg=pynmea2.parse(newdata)
-		your_lat=newmsg.latitude
-		your_lon=newmsg.longitude
-    return your_lat, your_lon
-"""
+def get_gps_coords():
+    """Fetches GPS coordinates once from the serial port"""
+    port = "/dev/ttyAMA0"
+    try:
+        with serial.Serial(port, baudrate=9600, timeout=0.5) as ser:
+            data = ser.readline()
+            if data.startswith(b'$GPRMC'):
+                msg = pynmea2.parse(data.decode('ascii'))
+                if hasattr(msg, 'latitude') and hasattr(msg, 'longitude'):
+                    return msg.latitude, msg.longitude
+            return None  # No valid GPS data found
+    
+    except (serial.SerialException, pynmea2.ParseError, UnicodeDecodeError) as e:
+        print(f"GPS error: {e}")
+        return None
 #^UNCOMMENT WHEN USING MODULES ON RASPI
 
 # --- Drawing Function ---
