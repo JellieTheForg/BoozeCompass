@@ -109,7 +109,7 @@ def get_gps_coords():
 def init_display():
     i2c=board.I2C()
     disp = SSD1306_I2C(128, 64, i2c, addr=0x3C)
-    disp.begin()
+    disp.show()
     disp.clear()
     disp.display()
     return disp
