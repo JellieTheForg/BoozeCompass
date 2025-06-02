@@ -19,16 +19,13 @@ your_lon = -79.38122281349305
 heading = 90
 
 # --- Compass Functions ---
-ADDRESS = 0x1E
-"""
-#bus = smbus.SMBus(1)
-#bus.write_byte_data(ADDRESS, 0x00, 0x70)  # 8 samples, 15Hz
-#bus.write_byte_data(ADDRESS, 0x01, 0x20)  # Gain = 1.3 gauss 
-#bus.write_byte_data(ADDRESS, 0x02, 0x00)  # Continuous mode(doesn't sleep after taking one measurement)
-"""
-#^UNCOMMENT WHEN USING MODULES ON RASPI
 
 def read_word(addr):
+    ADDRESS = 0x1E
+    bus = smbus.SMBus(1)
+    bus.write_byte_data(ADDRESS, 0x00, 0x70)  # 8 samples, 15Hz
+    bus.write_byte_data(ADDRESS, 0x01, 0x20)  # Gain = 1.3 gauss 
+    bus.write_byte_data(ADDRESS, 0x02, 0x00)  # Continuous mode(doesn't sleep after taking one measurement)
     high = bus.read_byte_data(ADDRESS, addr)
     low = bus.read_byte_data(ADDRESS, addr + 1)
     val = (high << 8) + low
